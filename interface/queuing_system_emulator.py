@@ -151,8 +151,14 @@ class Ui_queuing_system_emulator(object):
         #     self.verticalLayout.addWidget(object)
         # self.scrollAreaWidgetContents.setLayout(self.verticalLayout)
 
-        cash = Ui_Form()
-        self.verticalLayout.addWidget(cash)
+        #cash = Ui_Form()
+        # cash = QLabel(f"TextLabel r")
+        for i in range(5):
+            Form = QtWidgets.QWidget()
+            ui = Ui_Form()
+            ui.setupUi(Form)
+
+            self.verticalLayout.addWidget(Form)
         self.scrollAreaWidgetContents.setLayout(self.verticalLayout)
 
 
