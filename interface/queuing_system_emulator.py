@@ -125,7 +125,7 @@ class Ui_queuing_system_emulator(object):
         # Scrollarea
         self.scrollArea = QtWidgets.QScrollArea(self.centralwidget)
         self.scrollArea.setStyleSheet("background-color: rgb(192, 192, 192);")
-        self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        # self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName("scrollArea")
 
@@ -142,25 +142,25 @@ class Ui_queuing_system_emulator(object):
         self.frame.raise_()
         queuing_system_emulator.setCentralWidget(self.centralwidget)
 
-        # print(self.verticalLayout.count())
-        # self.verticalLayout.insertWidget(1, cash)
+        # Change in spinbox
 
+        Form = QtWidgets.QWidget()
+        ui = Ui_Form()
+        ui.setupUi(Form)
 
-        # for i in range(1, 50):
-        #     object = QLabel(f"TextLabel {i}")
-        #     self.verticalLayout.addWidget(object)
-        # self.scrollAreaWidgetContents.setLayout(self.verticalLayout)
-
-        #cash = Ui_Form()
-        # cash = QLabel(f"TextLabel r")
-        for i in range(5):
-            Form = QtWidgets.QWidget()
-            ui = Ui_Form()
-            ui.setupUi(Form)
-
-            self.verticalLayout.addWidget(Form)
+        self.verticalLayout.addWidget(Form)
         self.scrollAreaWidgetContents.setLayout(self.verticalLayout)
 
+        self.previous_value_of_the_number_of_cash_registers = self.checkout.value()
+        self.checkout.valueChanged.connect(self.change_the_number_of_checkouts)
+
+        # for i in range(5):
+        #     Form = QtWidgets.QWidget()
+        #     ui = Ui_Form()
+        #     ui.setupUi(Form)
+        #
+        #     self.verticalLayout.addWidget(Form)
+        # self.scrollAreaWidgetContents.setLayout(self.verticalLayout)
 
         self.retranslateUi(queuing_system_emulator)
         QtCore.QMetaObject.connectSlotsByName(queuing_system_emulator)
@@ -174,6 +174,24 @@ class Ui_queuing_system_emulator(object):
         self.checkout_label.setText(_translate("queuing_system_emulator", "Число касс"))
         self.arrival_time_label.setText(_translate("queuing_system_emulator", "Время прихода"))
         self.start_button.setText(_translate("queuing_system_emulator", "Start"))
+
+    def change_the_number_of_checkouts(self):
+        number = self.checkout.value() - self.previous_value_of_the_number_of_cash_registers
+        if number > 0:
+            for i in range(number):
+                Form = QtWidgets.QWidget()
+                ui = Ui_Form()
+                ui.setupUi(Form)
+                self.verticalLayout.addWidget(Form)
+        else:
+            for i in range(self.verticalLayout.count() - 1,
+                           self.verticalLayout.count() - 1 - (self.verticalLayout.count() - self.checkout.value()), -1):
+                delete_widget = self.verticalLayout.takeAt(i).widget()
+                if delete_widget is not None:
+                    delete_widget.deleteLater()
+
+        self.scrollAreaWidgetContents.setLayout(self.verticalLayout)
+        self.previous_value_of_the_number_of_cash_registers = self.checkout.value()
 
 
 if __name__ == "__main__":
