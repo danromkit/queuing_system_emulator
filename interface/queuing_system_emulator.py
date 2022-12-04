@@ -9,13 +9,15 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+import sys
+import random
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QLabel
 
 from interface.cash_box_with_Qwidget import Ui_Form
 
 
-class Ui_queuing_system_emulator(object):
+class Ui_queuing_system_emulator(QtWidgets.QWidget):
     def setupUi(self, queuing_system_emulator):
         queuing_system_emulator.setObjectName("queuing_system_emulator")
         queuing_system_emulator.resize(910, 500)
@@ -142,25 +144,37 @@ class Ui_queuing_system_emulator(object):
         self.frame.raise_()
         queuing_system_emulator.setCentralWidget(self.centralwidget)
 
+        self.checkouts = []
+
         # Change in spinbox
+        for i in range(1, self.checkout.value() + 1):
+            Form = QtWidgets.QWidget()
+            ui = Ui_Form()
+            ui.number_Checkout = i
+            ui.setupUi(Form)
+            self.verticalLayout.addWidget(Form)
+            self.checkouts.append(ui)
+            # print("print(len(self.checkouts)): ", len(self.checkouts))
 
-        Form = QtWidgets.QWidget()
-        ui = Ui_Form()
-        ui.setupUi(Form)
 
-        self.verticalLayout.addWidget(Form)
         self.scrollAreaWidgetContents.setLayout(self.verticalLayout)
 
         self.previous_value_of_the_number_of_cash_registers = self.checkout.value()
         self.checkout.valueChanged.connect(self.change_the_number_of_checkouts)
 
-        # for i in range(5):
-        #     Form = QtWidgets.QWidget()
-        #     ui = Ui_Form()
-        #     ui.setupUi(Form)
-        #
-        #     self.verticalLayout.addWidget(Form)
-        # self.scrollAreaWidgetContents.setLayout(self.verticalLayout)
+        # Change in people spinbox
+        self.people.valueChanged.connect(self.print_people)
+        self.all_peoples = 0
+
+
+        # Change in arrival_time spinbox
+        # arrival_time = random.uniform(1, self.arrival_time.value())
+
+        self.mainTimer = QtCore.QTimer(self)
+        self.mainTimer.timeout.connect(self.print_people)
+        self.mainTimer.start()
+
+        self.stop_button.clicked.connect(self.stop)
 
         self.retranslateUi(queuing_system_emulator)
         QtCore.QMetaObject.connectSlotsByName(queuing_system_emulator)
@@ -178,25 +192,56 @@ class Ui_queuing_system_emulator(object):
     def change_the_number_of_checkouts(self):
         number = self.checkout.value() - self.previous_value_of_the_number_of_cash_registers
         if number > 0:
-            for i in range(number):
+            for i in range(self.previous_value_of_the_number_of_cash_registers + 1, self.checkout.value() + 1):
                 Form = QtWidgets.QWidget()
                 ui = Ui_Form()
+                ui.number_Checkout = i
                 ui.setupUi(Form)
                 self.verticalLayout.addWidget(Form)
+                self.checkouts.append(ui)
+                # print("print(len(self.checkouts)): ", len(self.checkouts))
         else:
             for i in range(self.verticalLayout.count() - 1,
                            self.verticalLayout.count() - 1 - (self.verticalLayout.count() - self.checkout.value()), -1):
                 delete_widget = self.verticalLayout.takeAt(i).widget()
                 if delete_widget is not None:
                     delete_widget.deleteLater()
+                self.checkouts.pop()
+                # print("print(len(self.checkouts)): ", len(self.checkouts))
 
         self.scrollAreaWidgetContents.setLayout(self.verticalLayout)
         self.previous_value_of_the_number_of_cash_registers = self.checkout.value()
 
+    def print_people(self):
+        arrival_time = random.randint(1, self.arrival_time.value())
+        self.mainTimer.setInterval(arrival_time * 1000)
+        people = random.randint(0, self.people.value())
+        for i in range(people):
+            min_queue = self.find_min_people_in_queue()
+            min_queue.queue += 1
+            min_queue.queue_length.setText(f'{min_queue.queue}')
+        # self.all_peoples += people
+
+    def find_min_people_in_queue(self):
+        min = 1000
+        for i in range(len(self.checkouts)):
+            if min > self.checkouts[i].queue:
+                min = self.checkouts[i].queue
+                min_index = i
+        return self.checkouts[min_index]
+
+    # def find_min_people_in_queue(self):
+    #     min = self.checkouts[0].queue
+    #     for i in range(1, len(self.checkouts)):
+    #         if min > self.checkouts[i].queue:
+    #             min = self.checkouts[i].queue
+    #             min_index = i
+    #     return self.checkouts[min_index]
+
+    def stop(self):
+        self.mainTimer.stop()
 
 if __name__ == "__main__":
-    import sys
-
     app = QtWidgets.QApplication(sys.argv)
     queuing_system_emulator = QtWidgets.QMainWindow()
     ui = Ui_queuing_system_emulator()
