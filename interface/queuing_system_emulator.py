@@ -98,7 +98,7 @@ class Ui_queuing_system_emulator(QtWidgets.QWidget):
         font.setFamily("Verdana")
         font.setPointSize(14)
         self.checkout.setFont(font)
-        self.checkout.setMinimum(1)
+        self.checkout.setMinimum(3)
         self.checkout.setObjectName("checkout")
         self.gridLayout.addWidget(self.checkout, 0, 2, 1, 1)
 
@@ -145,27 +145,38 @@ class Ui_queuing_system_emulator(QtWidgets.QWidget):
         queuing_system_emulator.setCentralWidget(self.centralwidget)
 
         self.checkouts = []
+        self.clock_1 = []
+        self.clock_2 = []
 
         # Change in spinbox
-        for i in range(1, self.checkout.value() + 1):
+        for i in range(0, self.checkout.value()):
             Form = QtWidgets.QWidget()
-            ui = Ui_Form()
-            ui.number_Checkout = i
-            ui.setupUi(Form)
-            self.verticalLayout.addWidget(Form)
-            self.checkouts.append(ui)
-            # print("print(len(self.checkouts)): ", len(self.checkouts))
+            cash = Ui_Form()
+            cash.number_Checkout = i + 1
 
+            cash.timer = QtCore.QTimer(self)
+            cash.timer.timeout.connect(lambda inter=i: self.removing_people_from_queue(inter))
+
+            t_1 = cash.time_1
+            self.clock_1.append(t_1)
+            t_2 = cash.time_2
+            self.clock_2.append(t_2)
+            cash.maintenance_time = random.randint(self.clock_1[i], self.clock_2[i])
+            # print("cash.maintenance_time: ", cash.maintenance_time)
+
+            cash.timer.setInterval((cash.maintenance_time + 1) * 1000)
+            cash.timer.start()
+            self.checkouts.append(cash)
+
+            cash.setupUi(Form)
+            self.verticalLayout.addWidget(Form)
+            # self.checkouts.append(ui)
+            # print("print(len(self.checkouts)): ", len(self.checkouts))
 
         self.scrollAreaWidgetContents.setLayout(self.verticalLayout)
 
         self.previous_value_of_the_number_of_cash_registers = self.checkout.value()
         self.checkout.valueChanged.connect(self.change_the_number_of_checkouts)
-
-        # Change in people spinbox
-        self.people.valueChanged.connect(self.print_people)
-        self.all_peoples = 0
-
 
         # Change in arrival_time spinbox
         # arrival_time = random.uniform(1, self.arrival_time.value())
@@ -174,7 +185,14 @@ class Ui_queuing_system_emulator(QtWidgets.QWidget):
         self.mainTimer.timeout.connect(self.print_people)
         self.mainTimer.start()
 
+        self.flag = True
+        # Change in people spinbox
+
+        self.people.valueChanged.connect(self.print_people)
+        self.all_peoples = 0
+
         self.stop_button.clicked.connect(self.stop)
+        self.start_button.clicked.connect(self.resume)
 
         self.retranslateUi(queuing_system_emulator)
         QtCore.QMetaObject.connectSlotsByName(queuing_system_emulator)
@@ -190,15 +208,37 @@ class Ui_queuing_system_emulator(QtWidgets.QWidget):
         self.start_button.setText(_translate("queuing_system_emulator", "Start"))
 
     def change_the_number_of_checkouts(self):
+        n1 = self.checkout.value()
+        n2 = self.previous_value_of_the_number_of_cash_registers
         number = self.checkout.value() - self.previous_value_of_the_number_of_cash_registers
         if number > 0:
-            for i in range(self.previous_value_of_the_number_of_cash_registers + 1, self.checkout.value() + 1):
+            for i in range(self.previous_value_of_the_number_of_cash_registers, self.checkout.value()):
+                # Form = QtWidgets.QWidget()
+                # cash = Ui_Form()
+                # cash.number_Checkout = i + 1
+                # cash.setupUi(Form)
+                # self.verticalLayout.addWidget(Form)
+                # self.checkouts.append(cash)
                 Form = QtWidgets.QWidget()
-                ui = Ui_Form()
-                ui.number_Checkout = i
-                ui.setupUi(Form)
+                cash = Ui_Form()
+                cash.number_Checkout = i + 1
+
+                cash.timer = QtCore.QTimer(self)
+                cash.timer.timeout.connect(lambda inter=i: self.removing_people_from_queue(inter))
+
+                t_1 = cash.time_1
+                self.clock_1.append(t_1)
+                t_2 = cash.time_2
+                self.clock_2.append(t_2)
+                cash.maintenance_time = random.randint(self.clock_1[i], self.clock_2[i])
+                # print("cash.maintenance_time: ", cash.maintenance_time)
+
+                cash.timer.setInterval((cash.maintenance_time + 1) * 1000)
+                cash.timer.start()
+                self.checkouts.append(cash)
+
+                cash.setupUi(Form)
                 self.verticalLayout.addWidget(Form)
-                self.checkouts.append(ui)
                 # print("print(len(self.checkouts)): ", len(self.checkouts))
         else:
             for i in range(self.verticalLayout.count() - 1,
@@ -213,13 +253,14 @@ class Ui_queuing_system_emulator(QtWidgets.QWidget):
         self.previous_value_of_the_number_of_cash_registers = self.checkout.value()
 
     def print_people(self):
-        arrival_time = random.randint(1, self.arrival_time.value())
-        self.mainTimer.setInterval(arrival_time * 1000)
-        people = random.randint(0, self.people.value())
-        for i in range(people):
-            min_queue = self.find_min_people_in_queue()
-            min_queue.queue += 1
-            min_queue.queue_length.setText(f'{min_queue.queue}')
+        if self.flag:
+            arrival_time = random.randint(1, self.arrival_time.value())
+            self.mainTimer.setInterval(arrival_time * 1000)
+            people = random.randint(0, self.people.value())
+            for i in range(people):
+                min_queue = self.find_min_people_in_queue()
+                min_queue.queue += 1
+                min_queue.queue_length.setText(f'{min_queue.queue}')
         # self.all_peoples += people
 
     def find_min_people_in_queue(self):
@@ -238,8 +279,40 @@ class Ui_queuing_system_emulator(QtWidgets.QWidget):
     #             min_index = i
     #     return self.checkouts[min_index]
 
+    def removing_people_from_queue(self, number_cash_desk):
+        if self.checkouts[number_cash_desk].queue != 0:
+            self.checkouts[number_cash_desk].queue -= 1
+            self.clock_1[number_cash_desk] = self.checkouts[number_cash_desk].time_1
+            self.clock_2[number_cash_desk] = self.checkouts[number_cash_desk].time_2
+            # self.checkouts[number_cash_desk - 1].maintenance_time = random.randint(self.time_1,
+            #                                                                        self.time_2)
+            self.checkouts[number_cash_desk].maintenance_time = random.randint(self.clock_1[number_cash_desk],
+                                                                                   self.clock_2[number_cash_desk])
+
+            print(
+                f"Номер кассы: {self.checkouts[number_cash_desk].number_Checkout}, first_time: {self.clock_1[number_cash_desk]}, second_time: {self.clock_2[number_cash_desk]}")
+            print(f"Рандомное время: {self.checkouts[number_cash_desk].maintenance_time}")
+
+            self.checkouts[number_cash_desk].timer.setInterval(
+                self.checkouts[number_cash_desk].maintenance_time * 1000)
+            self.checkouts[number_cash_desk].queue_length.setText(f'{self.checkouts[number_cash_desk].queue}')
+            # min_queue.queue_length.setText(f'{min_queue.queue}')
+        else:
+            print("касса свободна")
+
     def stop(self):
+        self.flag = False
         self.mainTimer.stop()
+        for i in range(len(self.checkouts)):
+            print(self.checkouts[i].number_Checkout)
+            self.checkouts[i].timer.stop()
+
+    def resume(self):
+        self.flag = True
+        self.mainTimer.start()
+        for i in range(len(self.checkouts)):
+            self.checkouts[i].timer.start()
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

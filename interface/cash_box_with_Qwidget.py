@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'cash_box_with_Qwidget.ui'
+# Form implementation generated from reading cash file 'cash_box_with_Qwidget.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.4
 #
@@ -19,9 +19,9 @@ class Ui_Form(QWidget):
         self.mean = []
         self.timer = None
         self.number_Checkout = None
-        self.maintenance_time = None
-        self.time_1 = None
-        self.time_2 = None
+        self.maintenance_time = 0
+        self.time_1 = 1
+        self.time_2 = 3
 
     def setupUi(self, Form):
         Form.setObjectName("Form")
@@ -161,9 +161,11 @@ class Ui_Form(QWidget):
         # if self.queue != self.previous_queue:
         self.queue_length.setText(str(self.queue))
 
-
-        self.time_1 = self.service_time_1.value()
-        self.time_2 = self.service_time_2.value()
+        # self.service_time_1.valueChanged.connect(self.change_time_1)
+        # self.service_time_2.valueChanged.connect(self.change_time_2)
+        self.set_time_button.clicked.connect(self.time_changed)
+        # self.time_1 = self.service_time_1.value()
+        # self.time_2 = self.service_time_2.value()
         # self.maintenance_time = random.randint(self.time_1, self.time_2)
         # self.mean.append(self.maintenance_time)
 
@@ -185,6 +187,17 @@ class Ui_Form(QWidget):
         self.service_time_label.setText(_translate("Form", "Время обслуживания (с)"))
         self.set_time_button.setText(_translate("Form", "Утановить"))
         self.interval.setText(_translate("Form", "TextLabel"))
+
+    def change_time_1(self):
+        self.time_1 = self.service_time_1.value()
+
+    def change_time_2(self):
+        self.time_2 = self.service_time_2.value()
+
+    def time_changed(self):
+        self.time_1 = self.service_time_1.value()
+        self.time_2 = self.service_time_2.value()
+        self.interval.setText(f'[{self.time_1};{self.time_2}]')
 
 
 if __name__ == "__main__":
