@@ -98,7 +98,7 @@ class Ui_queuing_system_emulator(QtWidgets.QWidget):
         font.setFamily("Verdana")
         font.setPointSize(14)
         self.checkout.setFont(font)
-        self.checkout.setMinimum(3)
+        self.checkout.setMinimum(4)
         self.checkout.setObjectName("checkout")
         self.gridLayout.addWidget(self.checkout, 0, 2, 1, 1)
 
@@ -162,6 +162,7 @@ class Ui_queuing_system_emulator(QtWidgets.QWidget):
             t_2 = cash.time_2
             self.clock_2.append(t_2)
             cash.maintenance_time = random.randint(self.clock_1[i], self.clock_2[i])
+            cash.list_maintenance_time.append(cash.maintenance_time)
             # print("cash.maintenance_time: ", cash.maintenance_time)
 
             cash.timer.setInterval((cash.maintenance_time + 1) * 1000)
@@ -222,6 +223,7 @@ class Ui_queuing_system_emulator(QtWidgets.QWidget):
                 Form = QtWidgets.QWidget()
                 cash = Ui_Form()
                 cash.number_Checkout = i + 1
+                # cash.progressBar.
 
                 cash.timer = QtCore.QTimer(self)
                 cash.timer.timeout.connect(lambda inter=i: self.removing_people_from_queue(inter))
@@ -236,6 +238,8 @@ class Ui_queuing_system_emulator(QtWidgets.QWidget):
                 cash.timer.setInterval((cash.maintenance_time + 1) * 1000)
                 cash.timer.start()
                 self.checkouts.append(cash)
+                # d = len(cash.list_maintenance_time) / cash.all_queue
+                # cash.avarage_time.setText(str(d))
 
                 cash.setupUi(Form)
                 self.verticalLayout.addWidget(Form)
@@ -243,6 +247,16 @@ class Ui_queuing_system_emulator(QtWidgets.QWidget):
         else:
             for i in range(self.verticalLayout.count() - 1,
                            self.verticalLayout.count() - 1 - (self.verticalLayout.count() - self.checkout.value()), -1):
+                self.checkouts[i].timer.stop()
+                self.people_c = self.checkouts[i].queue
+                self.print_people_del()
+                self.checkouts[i].queue = 0
+                self.checkouts[i].maintenance_time = 0
+                self.checkouts[i].mean = []
+
+
+                self.clock_1.pop(len(self.checkouts) - 1)
+                self.clock_2.pop(len(self.checkouts) - 1)
                 delete_widget = self.verticalLayout.takeAt(i).widget()
                 if delete_widget is not None:
                     delete_widget.deleteLater()
@@ -260,8 +274,43 @@ class Ui_queuing_system_emulator(QtWidgets.QWidget):
             for i in range(people):
                 min_queue = self.find_min_people_in_queue()
                 min_queue.queue += 1
+                min_queue.all_queue += 1
+                # min_queue.workload.setStyleSheet("background-color: #7FFF00")
                 min_queue.queue_length.setText(f'{min_queue.queue}')
+                d = len(min_queue.list_maintenance_time) / min_queue.all_queue
+                min_queue.avarage_time.setText(str(d))
+            self.find_min_people_in_queue_1()
+
         # self.all_peoples += people
+
+    def print_people_del(self):
+        for i in range(self.people_c):
+            min_queue = self.find_min_people_in_queue()
+            min_queue.queue += 1
+            min_queue.all_queue += 1
+            # min_queue.workload.setStyleSheet("background-color: #7FFF00")
+            min_queue.queue_length.setText(f'{min_queue.queue}')
+            d = len(min_queue.list_maintenance_time) / min_queue.all_queue
+            min_queue.avarage_time.setText(str(d))
+            self.find_min_people_in_queue_1()
+
+    def find_min_people_in_queue_1(self):
+        min = 1000
+        for i in range(len(self.checkouts)):
+            if min > self.checkouts[i].queue:
+                min = self.checkouts[i].queue
+                min_index = i
+        max = -1
+        for i in range(len(self.checkouts)):
+            if max < self.checkouts[i].queue:
+                max = self.checkouts[i].queue
+                max_index = i
+
+        for i in range(len(self.checkouts)):
+            self.checkouts[i].workload.setStyleSheet("background-color: #DCDCDC")
+
+        self.checkouts[min_index].workload.setStyleSheet("background-color: #7FFF00")
+        self.checkouts[max_index].workload.setStyleSheet("background-color: #FF0000")
 
     def find_min_people_in_queue(self):
         min = 1000
@@ -269,6 +318,17 @@ class Ui_queuing_system_emulator(QtWidgets.QWidget):
             if min > self.checkouts[i].queue:
                 min = self.checkouts[i].queue
                 min_index = i
+        # max = -1
+        # for i in range(len(self.checkouts)):
+        #     if max < self.checkouts[i].queue:
+        #         max = self.checkouts[i].queue
+        #         max_index = i
+        #
+        for i in range(len(self.checkouts)):
+            self.checkouts[i].workload.setStyleSheet("background-color: #DCDCDC")
+
+        self.checkouts[min_index].workload.setStyleSheet("background-color: #7FFF00")
+        # self.checkouts[max_index].workload.setStyleSheet("background-color: #FF0000")
         return self.checkouts[min_index]
 
     # def find_min_people_in_queue(self):
@@ -287,7 +347,10 @@ class Ui_queuing_system_emulator(QtWidgets.QWidget):
             # self.checkouts[number_cash_desk - 1].maintenance_time = random.randint(self.time_1,
             #                                                                        self.time_2)
             self.checkouts[number_cash_desk].maintenance_time = random.randint(self.clock_1[number_cash_desk],
-                                                                                   self.clock_2[number_cash_desk])
+                                                                               self.clock_2[number_cash_desk])
+            self.checkouts[number_cash_desk].list_maintenance_time.append(self.checkouts[number_cash_desk].maintenance_time)
+            self.find_min_people_in_queue_1()
+
 
             print(
                 f"Номер кассы: {self.checkouts[number_cash_desk].number_Checkout}, first_time: {self.clock_1[number_cash_desk]}, second_time: {self.clock_2[number_cash_desk]}")
@@ -295,8 +358,10 @@ class Ui_queuing_system_emulator(QtWidgets.QWidget):
 
             self.checkouts[number_cash_desk].timer.setInterval(
                 self.checkouts[number_cash_desk].maintenance_time * 1000)
+            d = len(self.checkouts[number_cash_desk].list_maintenance_time) / self.checkouts[number_cash_desk].all_queue
+            self.checkouts[number_cash_desk].avarage_time.setText(str(d))
             self.checkouts[number_cash_desk].queue_length.setText(f'{self.checkouts[number_cash_desk].queue}')
-            # min_queue.queue_length.setText(f'{min_queue.queue}')
+            # min_queue.queue_length.setText(f'{min_q ueue.queue}')
         else:
             print("касса свободна")
 

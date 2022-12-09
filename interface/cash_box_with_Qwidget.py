@@ -20,6 +20,8 @@ class Ui_Form(QWidget):
         self.timer = None
         self.number_Checkout = None
         self.maintenance_time = 0
+        self.list_maintenance_time = []
+        self.all_queue = 0
         self.time_1 = 1
         self.time_2 = 3
 
@@ -160,6 +162,9 @@ class Ui_Form(QWidget):
         # self.previous_queue = self.queue
         # if self.queue != self.previous_queue:
         self.queue_length.setText(str(self.queue))
+
+        # d = len(self.list_maintenance_time) / self.all_queue
+        # self.avarage_time.setText(str(d))
 
         # self.service_time_1.valueChanged.connect(self.change_time_1)
         # self.service_time_2.valueChanged.connect(self.change_time_2)
